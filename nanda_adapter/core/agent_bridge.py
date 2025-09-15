@@ -486,6 +486,8 @@ def handle_external_message(msg_text, conversation_id, msg):
         
         # Trim trailing newline
         message_content = message_content.rstrip()
+
+        confirmation_keywords = ["got it", "confirmed", "✅", "order confirmed", "ready for pickup", "will be prepared"]
         
         print(f"Received external message from {from_agent} to {to_agent}")
 
