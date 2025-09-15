@@ -488,6 +488,16 @@ def handle_external_message(msg_text, conversation_id, msg):
         message_content = message_content.rstrip()
         
         print(f"Received external message from {from_agent} to {to_agent}")
+
+        if any(keyword in message_content.lower() for keyword in confirmation_keywords):
+        print(f"Order confirmation received from {from_agent}, ending conversation")
+        return Message(
+            role=MessageRole.AGENT,
+            content=TextContent(text=f"Order confirmed by {from_agent}"),
+            parent_message_id=msg.message_id,
+            conversation_id=conversation_id
+        )
+
         
         conversation_counts = getattr(handle_external_message, 'conversation_counts', {})
         conv_key = f"{from_agent}_{to_agent}_{conversation_id}"
