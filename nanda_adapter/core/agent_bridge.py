@@ -72,7 +72,7 @@ def get_registry_url():
         print(f"Error reading registry URL from file: {e}")
     
     # Default if file doesn't exist
-    default_url = "https://chat.nanda-registry.com:6900"
+    default_url = "https://registry.chat39.com"
     print(f"Using default registry URL: {default_url}")
     return default_url
 
@@ -494,6 +494,62 @@ def handle_external_message(msg_text, conversation_id, msg):
         
         print("Message Text: ", message_content)
         print("UI MODE: ", UI_MODE)
+
+         # Generate response using the agent's custom improvement logic
+        agent_bridge = AgentBridge()  # Get current bridge instance
+        try:
+            # Use the agent's custom improvement function to generate response
+            print(f"Active improver: {agent_bridge.active_improver}")
+            print(f"Available improvers: {list(message_improvement_decorators.keys())}")
+            agent_bridge.set_message_improver("nanda_custom")
+            response_text = agent_bridge.improve_message_direct(message_content)
+            print(f"Generated response: {response_text}")
+            print("------RESPONSE TEXT END ---------")
+
+            # Send response back to the sender
+            result = send_to_agent(from_agent, response_text, conversation_id, {
+                'is_external': True,
+                'from_agent_id': get_agent_id(),
+                'to_agent_id': from_agent,
+                'path': f"{to_agent}>{from_agent}"
+            })
+            print(f"Send result: {result}")
+            
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            # Fallback response
+            response_text = f"Message received from {from_agent}: {message_content}"
+            send_to_agent(from_agent, response_text, conversation_id, {
+                'is_external': True,
+                'from_agent_id': get_agent_id(),
+                'to_agent_id': from_agent
+            })
+
+        # Generate response using the agent's custom improvement logic
+        agent_bridge = AgentBridge()  # Get current bridge instance
+        try:
+            # Use the agent's custom improvement function to generate response
+            response_text = agent_bridge.improve_message_direct(message_content)
+            print(f"Generated response: {response_text}")
+            
+            # Send response back to the sender
+            result = send_to_agent(from_agent, response_text, conversation_id, {
+                'is_external': True,
+                'from_agent_id': get_agent_id(),
+                'to_agent_id': from_agent,
+                'path': f"{to_agent}>{from_agent}"
+            })
+            print(f"Send result: {result}")
+            
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            # Fallback response
+            response_text = f"Message received from {from_agent}: {message_content}"
+            send_to_agent(from_agent, response_text, conversation_id, {
+                'is_external': True,
+                'from_agent_id': get_agent_id(),
+                'to_agent_id': from_agent
+            })
 
         # If in UI mode, forward to all registered UI clients
         if UI_MODE:
