@@ -489,41 +489,34 @@ def handle_external_message(msg_text, conversation_id, msg):
         
         print(f"Received external message from {from_agent} to {to_agent}")
         
+        conversation_counts = getattr(handle_external_message, 'conversation_counts', {})
+        conv_key = f"{from_agent}_{to_agent}_{conversation_id}"
+        conversation_counts[conv_key] = conversation_counts.get(conv_key, 0) + 1
+        handle_external_message.conversation_counts = conversation_counts
+        
+        print(f"Conversation turn {conversation_counts[conv_key]} between {from_agent} and {to_agent}")
+        
+        # Check if conversation should end
+        if conversation_counts[conv_key] > 8:
+            summary = f"Conversation with {from_agent} completed after {conversation_counts[conv_key]} exchanges. Last message: {message_content[:100]}..."
+            print(f"Max turns reached, sending summary: {summary}")
+            
+            if UI_MODE:
+                send_to_ui_client(f"CONVERSATION SUMMARY: {summary}", get_agent_id(), conversation_id)
+            
+            return Message(
+                role=MessageRole.AGENT,
+                content=TextContent(text=f"Conversation completed. Summary: {summary}"),
+                parent_message_id=msg.message_id,
+                conversation_id=conversation_id
+            )
+
+
         # Format the message for display in terminal
         formatted_text = f"FROM {from_agent}: {message_content}"
         
         print("Message Text: ", message_content)
         print("UI MODE: ", UI_MODE)
-
-         # Generate response using the agent's custom improvement logic
-        agent_bridge = AgentBridge()  # Get current bridge instance
-        try:
-            # Use the agent's custom improvement function to generate response
-            print(f"Active improver: {agent_bridge.active_improver}")
-            print(f"Available improvers: {list(message_improvement_decorators.keys())}")
-            agent_bridge.set_message_improver("nanda_custom")
-            response_text = agent_bridge.improve_message_direct(message_content)
-            print(f"Generated response: {response_text}")
-            print("------RESPONSE TEXT END ---------")
-
-            # Send response back to the sender
-            result = send_to_agent(from_agent, response_text, conversation_id, {
-                'is_external': True,
-                'from_agent_id': get_agent_id(),
-                'to_agent_id': from_agent,
-                'path': f"{to_agent}>{from_agent}"
-            })
-            print(f"Send result: {result}")
-            
-        except Exception as e:
-            print(f"Error generating response: {e}")
-            # Fallback response
-            response_text = f"Message received from {from_agent}: {message_content}"
-            send_to_agent(from_agent, response_text, conversation_id, {
-                'is_external': True,
-                'from_agent_id': get_agent_id(),
-                'to_agent_id': from_agent
-            })
 
         # Generate response using the agent's custom improvement logic
         agent_bridge = AgentBridge()  # Get current bridge instance
