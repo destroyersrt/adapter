@@ -15,6 +15,7 @@ from python_a2a import (
 import asyncio
 from mcp_utils import MCPClient
 import base64
+import time
 
 import sys
 sys.stdout.reconfigure(line_buffering=True)
@@ -509,7 +510,7 @@ def handle_external_message(msg_text, conversation_id, msg):
         print(f"Conversation turn {conversation_counts[conv_key]} between {from_agent} and {to_agent}")
         
         # Check if conversation should end
-        if conversation_counts[conv_key] > 8:
+        if conversation_counts[conv_key] > 2:
             summary = f"Conversation with {from_agent} completed after {conversation_counts[conv_key]} exchanges. Last message: {message_content[:100]}..."
             print(f"Max turns reached, sending summary: {summary}")
             
@@ -769,7 +770,7 @@ class AgentBridge(A2AServer):
                         log_message(conversation_id, current_path, f"Claude {agent_id}", message_text)
 
                     print(f"#jinu - Target agent: {target_agent}")
-                    print(f"#jinu - Imoproved message text: {message_text}")
+                    print(f"#jinu - Improved message text: {message_text}")
                     # Send to the target agent's bridge
                     result = send_to_agent(target_agent, message_text, conversation_id, {
                         'path': current_path,
@@ -779,7 +780,7 @@ class AgentBridge(A2AServer):
                     # Return result to user
                     return Message(
                         role=MessageRole.AGENT,
-                        content=TextContent(text=f"[AGENT {agent_id}]: {message_text}"),
+                        content=TextContent(text=f"[AGENT {agent_id}]: Processing request with {target_agent}..."),
                         parent_message_id=msg.message_id,
                         conversation_id=conversation_id
                     )
